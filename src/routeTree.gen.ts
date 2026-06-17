@@ -10,33 +10,44 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicCronFetchMigrationsRouteImport } from './routes/api/public/cron/fetch-migrations'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronFetchMigrationsRoute =
+  ApiPublicCronFetchMigrationsRouteImport.update({
+    id: '/api/public/cron/fetch-migrations',
+    path: '/api/public/cron/fetch-migrations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/cron/fetch-migrations': typeof ApiPublicCronFetchMigrationsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/cron/fetch-migrations': typeof ApiPublicCronFetchMigrationsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/cron/fetch-migrations': typeof ApiPublicCronFetchMigrationsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/api/public/cron/fetch-migrations'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/public/cron/fetch-migrations'
+  id: '__root__' | '/' | '/api/public/cron/fetch-migrations'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicCronFetchMigrationsRoute: typeof ApiPublicCronFetchMigrationsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +59,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/fetch-migrations': {
+      id: '/api/public/cron/fetch-migrations'
+      path: '/api/public/cron/fetch-migrations'
+      fullPath: '/api/public/cron/fetch-migrations'
+      preLoaderRoute: typeof ApiPublicCronFetchMigrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicCronFetchMigrationsRoute: ApiPublicCronFetchMigrationsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
