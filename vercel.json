@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/public/cron/fetch-migrations",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
