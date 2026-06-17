@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      migrations: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          market_cap: number | null
+          migrated_at: string
+          mint_address: string
+          name: string | null
+          symbol: string | null
+          tx_signature: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          market_cap?: number | null
+          migrated_at: string
+          mint_address: string
+          name?: string | null
+          symbol?: string | null
+          tx_signature: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          market_cap?: number | null
+          migrated_at?: string
+          mint_address?: string
+          name?: string | null
+          symbol?: string | null
+          tx_signature?: string
+        }
+        Relationships: []
+      }
+      sync_state: {
+        Row: {
+          id: number
+          last_run_at: string | null
+          last_run_status: string | null
+          last_signature: string | null
+        }
+        Insert: {
+          id?: number
+          last_run_at?: string | null
+          last_run_status?: string | null
+          last_signature?: string | null
+        }
+        Update: {
+          id?: number
+          last_run_at?: string | null
+          last_run_status?: string | null
+          last_signature?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
