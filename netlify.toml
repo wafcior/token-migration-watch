@@ -1,0 +1,12 @@
+[build]
+  command = "bun run build"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Hourly trigger — endpoint itself is gated to 09:00 / 17:00 Europe/Warsaw.
+[[scheduled_functions]]
+  name = "fetch-migrations"
+  cron = "0 * * * *"
