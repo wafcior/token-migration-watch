@@ -33,36 +33,50 @@
   --color-brand-foreground: var(--brand-foreground);
   --color-success: var(--success);
   --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
+/* GMGN-inspired dark palette: near-black backgrounds, lime/green accent,
+   dense layout, monospace numerics. */
 :root {
-  --radius: 0.75rem;
-  --background: oklch(0.99 0.005 95);
-  --foreground: oklch(0.18 0.02 260);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.02 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.02 260);
-  --primary: oklch(0.22 0.03 260);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.97 0.005 260);
-  --secondary-foreground: oklch(0.22 0.03 260);
-  --muted: oklch(0.965 0.005 260);
-  --muted-foreground: oklch(0.5 0.02 260);
-  --accent: oklch(0.96 0.02 150);
-  --accent-foreground: oklch(0.22 0.03 260);
-  --destructive: oklch(0.6 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.92 0.005 260);
-  --input: oklch(0.92 0.005 260);
-  --ring: oklch(0.7 0.12 155);
-  --brand: oklch(0.72 0.17 152);
-  --brand-foreground: oklch(0.16 0.03 260);
-  --success: oklch(0.7 0.16 150);
+  --radius: 0.625rem;
+  --background: oklch(0.16 0.01 240);
+  --foreground: oklch(0.96 0.01 100);
+  --card: oklch(0.19 0.012 240);
+  --card-foreground: oklch(0.96 0.01 100);
+  --popover: oklch(0.19 0.012 240);
+  --popover-foreground: oklch(0.96 0.01 100);
+  --primary: oklch(0.85 0.2 135);
+  --primary-foreground: oklch(0.16 0.01 240);
+  --secondary: oklch(0.22 0.012 240);
+  --secondary-foreground: oklch(0.96 0.01 100);
+  --muted: oklch(0.22 0.012 240);
+  --muted-foreground: oklch(0.66 0.02 240);
+  --accent: oklch(0.26 0.04 135);
+  --accent-foreground: oklch(0.96 0.01 100);
+  --destructive: oklch(0.62 0.24 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.26 0.012 240);
+  --input: oklch(0.26 0.012 240);
+  --ring: oklch(0.85 0.2 135);
+  --brand: oklch(0.85 0.2 135);
+  --brand-foreground: oklch(0.16 0.01 240);
+  --success: oklch(0.85 0.2 135);
 }
 
 @layer base {
   * { border-color: var(--color-border); }
-  html, body { background-color: var(--color-background); color: var(--color-foreground); }
-  body { font-family: var(--font-display); font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiased; }
+  html, body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+  body {
+    font-family: var(--font-display);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, oklch(0.22 0.05 135 / 0.25), transparent 60%);
+    background-attachment: fixed;
+  }
+  .font-mono, code, pre { font-family: var(--font-mono); }
 }

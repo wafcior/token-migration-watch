@@ -17,21 +17,21 @@ const platforms: Platform[] = [
     label: "GMGN",
     description: "Wykresy i analityka on-chain",
     url: (m) => `https://gmgn.ai/sol/token/${m}`,
-    accent: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
+    accent: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/15",
   },
   {
     id: "axiom",
     label: "Axiom",
     description: "Pro trading terminal",
     url: (m) => `https://axiom.trade/token/${m}`,
-    accent: "bg-violet-500/10 text-violet-700 border-violet-500/20",
+    accent: "bg-violet-500/10 text-violet-300 border-violet-500/30 hover:bg-violet-500/15",
   },
   {
     id: "jupiter",
     label: "Jupiter",
     description: "Najlepsze ceny swapu na Solanie",
     url: (m) => `https://jup.ag/swap/SOL-${m}`,
-    accent: "bg-orange-500/10 text-orange-700 border-orange-500/20",
+    accent: "bg-orange-500/10 text-orange-300 border-orange-500/30 hover:bg-orange-500/15",
   },
 ];
 
@@ -169,7 +169,7 @@ export function TokenModal({
             ))}
             <button
               onClick={openPhantom}
-              className="flex w-full items-center justify-between rounded-xl border border-indigo-500/20 bg-indigo-500/10 px-4 py-4 text-left text-indigo-700 transition hover:opacity-90 active:scale-[0.99]"
+              className="flex w-full items-center justify-between rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-4 text-left text-indigo-300 transition hover:bg-indigo-500/15 active:scale-[0.99]"
             >
               <div>
                 <div className="text-base font-semibold">Phantom</div>
