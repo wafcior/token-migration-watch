@@ -77,15 +77,15 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/60 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-brand/15 text-brand-foreground">
-              <Activity className="h-5 w-5 text-emerald-700" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/30 bg-primary/10">
+              <Activity className="h-5 w-5 text-primary" />
             </div>
             <div>
               <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                PumpSwap Migrations
+                PumpSwap <span className="text-primary">Migrations</span>
               </h1>
               <p className="text-sm text-muted-foreground">
                 Tokeny Solana po bonding curve z Pump.fun → PumpSwap (AMM)
