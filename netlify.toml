@@ -6,6 +6,11 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/server"
+  status = 200
+
 # Hourly trigger — endpoint itself is gated to 09:00 / 17:00 Europe/Warsaw.
 [[scheduled_functions]]
   name = "fetch-migrations"
