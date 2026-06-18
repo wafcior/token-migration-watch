@@ -65,11 +65,21 @@ async function rpc(url: string, method: string, params: unknown) {
 const PUMP_PROGRAM = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";
 const SOL_MINT = "So11111111111111111111111111111111111111112";
 
+function isForced(request: Request): boolean {
+  try {
+    const url = new URL(request.url);
+    const v = url.searchParams.get("force");
+    return v === "true" || v === "1";
+  } catch {
+    return false;
+  }
+}
+
 export const Route = createFileRoute("/api/public/cron/fetch-migrations")({
   server: {
     handlers: {
-      GET: async () => handleCron(false),
-      POST: async () => handleCron(false),
+      GET: async ({ request }) => handleCron(isForced(request)),
+      POST: async ({ request }) => handleCron(isForced(request)),
     },
   },
 });
