@@ -11,7 +11,7 @@ import {
   formatPolishWarsaw,
   nextWarsawSlot,
 } from "@/lib/format";
-
+ 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/")({
   }),
   component: Index,
 });
-
+ 
 async function fetchMigrations(): Promise<MigrationRow[]> {
   const { data, error } = await supabase
     .from("migrations")
@@ -41,7 +41,7 @@ async function fetchMigrations(): Promise<MigrationRow[]> {
   if (error) throw error;
   return (data ?? []) as MigrationRow[];
 }
-
+ 
 async function fetchSyncState(): Promise<{
   last_run_at: string | null;
   last_run_status: string | null;
@@ -54,7 +54,7 @@ async function fetchSyncState(): Promise<{
   if (error) throw error;
   return data ?? { last_run_at: null, last_run_status: null };
 }
-
+ 
 function Index() {
   const queryClient = useQueryClient();
   const tokensQuery = useQuery({
@@ -67,10 +67,10 @@ function Index() {
     queryFn: fetchSyncState,
     refetchInterval: 60_000,
   });
-
+ 
   const [forcing, setForcing] = useState(false);
   const [forceMsg, setForceMsg] = useState<string | null>(null);
-
+ 
   const handleForceFetch = async () => {
     if (forcing) return;
     setForcing(true);
@@ -93,15 +93,21 @@ function Index() {
       setForcing(false);
     }
   };
-
+ 
   const [active, setActive] = useState<MigrationRow | null>(null);
-  const [now, setNow] = useState<Date>(() => new Date());
+ 
+  // FIX: start with null to avoid SSR/client hydration mismatch (React error #418)
+  const [now, setNow] = useState<Date | null>(null);
+ 
   useEffect(() => {
+    // initialise on client only
+    setNow(new Date());
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
-  const nextSlot = useMemo(() => nextWarsawSlot(now), [now]);
-
+ 
+  const nextSlot = useMemo(() => (now ? nextWarsawSlot(now) : null), [now]);
+ 
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
@@ -139,7 +145,7 @@ function Index() {
               )}
             </div>
           </div>
-
+ 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-border bg-card px-5 py-4">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -163,16 +169,16 @@ function Index() {
                 Następna aktualizacja
               </div>
               <div className="mt-1 text-sm font-semibold text-foreground">
-                {formatPolishWarsaw(nextSlot.toISOString())}
+                {nextSlot ? formatPolishWarsaw(nextSlot.toISOString()) : "—"}
               </div>
               <div className="mt-0.5 font-mono text-xs text-muted-foreground">
-                za {formatCountdown(nextSlot, now)}
+                {nextSlot && now ? `za ${formatCountdown(nextSlot, now)}` : "—"}
               </div>
             </div>
           </div>
         </div>
       </header>
-
+ 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {tokensQuery.isLoading ? (
           <LoadingGrid />
@@ -188,16 +194,16 @@ function Index() {
           </div>
         )}
       </main>
-
+ 
       <footer className="mx-auto max-w-7xl px-4 pb-10 pt-2 text-xs text-muted-foreground sm:px-6 lg:px-8">
         Dane odświeżane o 09:00 i 17:00 czasu warszawskiego.
       </footer>
-
+ 
       <TokenModal token={active} onClose={() => setActive(null)} />
     </div>
   );
 }
-
+ 
 function LoadingGrid() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -210,7 +216,7 @@ function LoadingGrid() {
     </div>
   );
 }
-
+ 
 function EmptyState() {
   return (
     <div className="rounded-2xl border border-dashed border-border bg-card px-6 py-16 text-center">
@@ -225,7 +231,7 @@ function EmptyState() {
     </div>
   );
 }
-
+ 
 function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-6 py-12 text-center">
