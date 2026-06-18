@@ -106,17 +106,37 @@ function Index() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/30 bg-primary/10">
-              <Activity className="h-5 w-5 text-primary" />
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/30 bg-primary/10">
+                <Activity className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                  PumpSwap <span className="text-primary">Migrations</span>
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Tokeny Solana po bonding curve z Pump.fun → PumpSwap (AMM)
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                PumpSwap <span className="text-primary">Migrations</span>
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Tokeny Solana po bonding curve z Pump.fun → PumpSwap (AMM)
-              </p>
+            <div className="flex flex-col items-end gap-1 pt-1">
+              <button
+                type="button"
+                onClick={handleForceFetch}
+                disabled={forcing}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {forcing ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3 w-3" />
+                )}
+                {forcing ? "Pobieranie…" : "Force fetch now"}
+              </button>
+              {forceMsg && (
+                <span className="text-[11px] text-muted-foreground">{forceMsg}</span>
+              )}
             </div>
           </div>
 
