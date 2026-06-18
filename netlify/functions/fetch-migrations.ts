@@ -96,12 +96,36 @@ function readForce(event: HandlerEvent): boolean {
     const qp = event?.queryStringParameters ?? {};
     const v = (qp.force ?? "").toString().toLowerCase();
     if (v === "true" || v === "1") return true;
+    
     const raw = (event?.rawQuery ?? "").toLowerCase();
     if (raw.includes("force=true") || raw.includes("force=1")) return true;
+
+    if (event?.body) {
+        const bodyStr = event.body.toLowerCase();
+        if (bodyStr.includes('"force":true') || bodyStr.includes('"force": true')) return true;
+        try {
+            const parsed = JSON.parse(event.body);
+            if (parsed.force === true || parsed.force === "true" || parsed.force === 1) return true;
+        } catch {
+            // zignoruj błędy parsowania JSON
+        }
+    }
     return false;
   } catch {
     return false;
   }
+}
+
+function extractErrorMsg(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "object" && err !== null) {
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return "Nie można przetworzyć obiektu błędu";
+    }
+  }
+  return String(err);
 }
 
 async function runSync(force: boolean) {
@@ -236,7 +260,7 @@ async function runSync(force: boolean) {
       const { error } = await supabaseAdmin
         .from("migrations")
         .upsert(rows, { onConflict: "mint_address" });
-      if (error) throw error;
+      if (error) throw error; 
     }
 
     const newest = sigs[0]?.signature ?? until ?? null;
@@ -255,7 +279,7 @@ async function runSync(force: boolean) {
       newest_signature: newest,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = extractErrorMsg(err);
     console.error("[fetch-migrations] error:", message);
     try {
       await supabaseAdmin
@@ -281,7 +305,7 @@ export const handler: Handler = async (event) => {
     const force = readForce(event);
     return await runSync(force);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = extractErrorMsg(err);
     console.error("[fetch-migrations] fatal:", message);
     return jsonResponse(500, { ok: false, error: message });
   }
