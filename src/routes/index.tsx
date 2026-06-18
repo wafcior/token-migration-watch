@@ -56,6 +56,7 @@ async function fetchSyncState(): Promise<{
 }
 
 function Index() {
+  const queryClient = useQueryClient();
   const tokensQuery = useQuery({
     queryKey: ["migrations"],
     queryFn: fetchMigrations,
@@ -66,6 +67,32 @@ function Index() {
     queryFn: fetchSyncState,
     refetchInterval: 60_000,
   });
+
+  const [forcing, setForcing] = useState(false);
+  const [forceMsg, setForceMsg] = useState<string | null>(null);
+
+  const handleForceFetch = async () => {
+    if (forcing) return;
+    setForcing(true);
+    setForceMsg(null);
+    try {
+      const res = await fetch("/.netlify/functions/fetch-migrations?force=true", {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await queryClient.invalidateQueries({ queryKey: ["migrations"] });
+      await queryClient.invalidateQueries({ queryKey: ["sync_state"] });
+      setForceMsg("Zaktualizowano");
+      setTimeout(() => setForceMsg(null), 3000);
+    } catch (err) {
+      setForceMsg(
+        `Błąd: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      setTimeout(() => setForceMsg(null), 5000);
+    } finally {
+      setForcing(false);
+    }
+  };
 
   const [active, setActive] = useState<MigrationRow | null>(null);
   const [now, setNow] = useState<Date>(() => new Date());
