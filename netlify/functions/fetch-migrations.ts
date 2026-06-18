@@ -12,10 +12,10 @@ import type { Handler, HandlerEvent } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
 
 const CORS_HEADERS: Record<string, string> = {
-  "access-control-allow-origin": "*",
-  "access-control-allow-methods": "GET, POST, OPTIONS",
-  "access-control-allow-headers": "Content-Type, Authorization",
-  "access-control-max-age": "86400",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
+  "Access-Control-Max-Age": "86400",
 };
 
 function jsonResponse(status: number, body: unknown) {
@@ -96,24 +96,45 @@ function readForce(event: HandlerEvent): boolean {
     const qp = event?.queryStringParameters ?? {};
     const v = (qp.force ?? "").toString().toLowerCase();
     if (v === "true" || v === "1") return true;
-    
-    const raw = (event?.rawQuery ?? "").toLowerCase();
+
+    const extendedEvent = event as HandlerEvent & {
+      rawQuery?: string;
+      rawUrl?: string;
+      multiValueQueryStringParameters?: Record<string, string[]> | null;
+    };
+    const multiForce = extendedEvent.multiValueQueryStringParameters?.force ?? [];
+    if (multiForce.some((value) => value.toLowerCase() === "true" || value === "1")) return true;
+
+    const raw = (extendedEvent.rawQuery ?? "").toLowerCase();
     if (raw.includes("force=true") || raw.includes("force=1")) return true;
 
+    if (extendedEvent.rawUrl) {
+      const forceFromUrl = new URL(extendedEvent.rawUrl).searchParams.get("force")?.toLowerCase();
+      if (forceFromUrl === "true" || forceFromUrl === "1") return true;
+    }
+
     if (event?.body) {
-        const bodyStr = event.body.toLowerCase();
-        if (bodyStr.includes('"force":true') || bodyStr.includes('"force": true')) return true;
-        try {
-            const parsed = JSON.parse(event.body);
-            if (parsed.force === true || parsed.force === "true" || parsed.force === 1) return true;
-        } catch {
-            // zignoruj błędy parsowania JSON
-        }
+      const decodedBody = event.isBase64Encoded
+        ? Buffer.from(event.body, "base64").toString("utf8")
+        : event.body;
+      const bodyStr = decodedBody.toLowerCase();
+      if (bodyStr.includes('"force":true') || bodyStr.includes('"force": true')) return true;
+      try {
+        const parsed = JSON.parse(decodedBody) as { force?: unknown };
+        if (parsed.force === true || parsed.force === "true" || parsed.force === 1) return true;
+      } catch {
+        // ignore non-JSON bodies
+      }
     }
     return false;
   } catch {
     return false;
   }
+}
+
+function getRequiredEnv(name: string): string | null {
+  const value = process.env[name];
+  return value && value.trim().length > 0 ? value.trim() : null;
 }
 
 function extractErrorMsg(err: unknown): string {
@@ -143,14 +164,13 @@ async function runSync(force: boolean) {
     return jsonResponse(500, { error: "Missing HELIUS_API_KEY" });
   }
 
-  const supabaseUrl =
-    process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const supabaseKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!supabaseUrl || !supabaseKey) {
-    return jsonResponse(500, { error: "Missing Supabase env vars" });
+  const supabaseUrl = getRequiredEnv("VITE_SUPABASE_URL") || getRequiredEnv("SUPABASE_URL");
+  const supabaseKey = getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl) {
+    return jsonResponse(500, { ok: false, error: "Missing VITE_SUPABASE_URL or SUPABASE_URL in Netlify environment variables" });
+  }
+  if (!supabaseKey) {
+    return jsonResponse(500, { ok: false, error: "Missing SUPABASE_SERVICE_ROLE_KEY in Netlify environment variables" });
   }
   const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -299,6 +319,10 @@ async function runSync(force: boolean) {
 export const handler: Handler = async (event) => {
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers: CORS_HEADERS, body: "" };
+  }
+
+  if (event.httpMethod !== "GET" && event.httpMethod !== "POST") {
+    return jsonResponse(405, { ok: false, error: "Method not allowed" });
   }
 
   try {
