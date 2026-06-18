@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Activity, AlertCircle, RefreshCw } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Activity, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { TokenCard } from "@/components/TokenCard";
 import { TokenModal } from "@/components/TokenModal";
@@ -56,6 +56,7 @@ async function fetchSyncState(): Promise<{
 }
 
 function Index() {
+  const queryClient = useQueryClient();
   const tokensQuery = useQuery({
     queryKey: ["migrations"],
     queryFn: fetchMigrations,
@@ -66,6 +67,32 @@ function Index() {
     queryFn: fetchSyncState,
     refetchInterval: 60_000,
   });
+
+  const [forcing, setForcing] = useState(false);
+  const [forceMsg, setForceMsg] = useState<string | null>(null);
+
+  const handleForceFetch = async () => {
+    if (forcing) return;
+    setForcing(true);
+    setForceMsg(null);
+    try {
+      const res = await fetch("/.netlify/functions/fetch-migrations?force=true", {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await queryClient.invalidateQueries({ queryKey: ["migrations"] });
+      await queryClient.invalidateQueries({ queryKey: ["sync_state"] });
+      setForceMsg("Zaktualizowano");
+      setTimeout(() => setForceMsg(null), 3000);
+    } catch (err) {
+      setForceMsg(
+        `Błąd: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      setTimeout(() => setForceMsg(null), 5000);
+    } finally {
+      setForcing(false);
+    }
+  };
 
   const [active, setActive] = useState<MigrationRow | null>(null);
   const [now, setNow] = useState<Date>(() => new Date());
@@ -79,17 +106,37 @@ function Index() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/30 bg-primary/10">
-              <Activity className="h-5 w-5 text-primary" />
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/30 bg-primary/10">
+                <Activity className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                  PumpSwap <span className="text-primary">Migrations</span>
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Tokeny Solana po bonding curve z Pump.fun → PumpSwap (AMM)
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                PumpSwap <span className="text-primary">Migrations</span>
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Tokeny Solana po bonding curve z Pump.fun → PumpSwap (AMM)
-              </p>
+            <div className="flex flex-col items-end gap-1 pt-1">
+              <button
+                type="button"
+                onClick={handleForceFetch}
+                disabled={forcing}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {forcing ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3 w-3" />
+                )}
+                {forcing ? "Pobieranie…" : "Force fetch now"}
+              </button>
+              {forceMsg && (
+                <span className="text-[11px] text-muted-foreground">{forceMsg}</span>
+              )}
             </div>
           </div>
 
