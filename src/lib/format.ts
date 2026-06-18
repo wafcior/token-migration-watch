@@ -12,22 +12,24 @@ export function formatMarketCap(mc: number | null | undefined): string {
   return `$${mc.toFixed(0)}`;
 }
 
-const plLong = new Intl.DateTimeFormat("pl-PL", {
-  timeZone: "Europe/Warsaw",
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
+// FIX: create Intl formatter lazily (inside function) to avoid SSR/client mismatch
+function getPlLong(): Intl.DateTimeFormat {
+  return new Intl.DateTimeFormat("pl-PL", {
+    timeZone: "Europe/Warsaw",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export function formatPolishWarsaw(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (isNaN(d.getTime())) return "—";
-  // Replace the comma Intl puts before time with " ·"
-  return plLong.format(d).replace(/,\s*(\d{2}:\d{2})$/, " · $1");
+  return getPlLong().format(d).replace(/,\s*(\d{2}:\d{2})$/, " · $1");
 }
 
 export function relativeFromNow(iso: string | null | undefined): string {
@@ -47,7 +49,6 @@ export function relativeFromNow(iso: string | null | undefined): string {
 
 /** Next 09:00 or 17:00 in Europe/Warsaw, returned as a Date (UTC instant). */
 export function nextWarsawSlot(now: Date = new Date()): Date {
-  // Determine current Warsaw H/M.
   const fmt = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Europe/Warsaw",
     year: "numeric",
@@ -61,9 +62,6 @@ export function nextWarsawSlot(now: Date = new Date()): Date {
   const get = (t: string) => Number(fmt.find((p) => p.type === t)?.value);
   const hour = get("hour");
   const minute = get("minute");
-
-  // Determine offset between Warsaw local clock and UTC at this moment, in minutes.
-  // Build a UTC date with Warsaw wall-clock fields, then compare to `now`.
   const warsawWall = Date.UTC(
     get("year"),
     get("month") - 1,
@@ -72,8 +70,7 @@ export function nextWarsawSlot(now: Date = new Date()): Date {
     minute,
     get("second"),
   );
-  const offsetMs = warsawWall - now.getTime(); // Warsaw is ahead of UTC by this much
-
+  const offsetMs = warsawWall - now.getTime();
   let targetHour: number;
   let dayShift = 0;
   if (hour < 9) targetHour = 9;
@@ -82,8 +79,6 @@ export function nextWarsawSlot(now: Date = new Date()): Date {
     targetHour = 9;
     dayShift = 1;
   }
-
-  // Construct target instant: Warsaw wall-clock at targetHour:00, then subtract offset to get UTC ms.
   const targetWarsawWall = Date.UTC(
     get("year"),
     get("month") - 1,
