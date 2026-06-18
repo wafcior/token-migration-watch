@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Copy, Check } from "lucide-react";
 import { formatMarketCap, relativeFromNow, shortenAddress } from "@/lib/format";
 import type { MigrationRow } from "@/lib/migrations.types";
@@ -12,6 +12,15 @@ export function TokenCard({
 }) {
   const [copied, setCopied] = useState(false);
   const [imgErr, setImgErr] = useState(false);
+
+  // FIX: relativeFromNow calls Date.now() — must be client-side only to avoid hydration mismatch
+  const [relTime, setRelTime] = useState<string>("—");
+  useEffect(() => {
+    setRelTime(relativeFromNow(token.migrated_at));
+    const id = setInterval(() => setRelTime(relativeFromNow(token.migrated_at)), 30_000);
+    return () => clearInterval(id);
+  }, [token.migrated_at]);
+
   const initial = (token.symbol || token.name || token.mint_address || "?")
     .slice(0, 1)
     .toUpperCase();
@@ -36,7 +45,6 @@ export function TokenCard({
       <div className="flex items-center gap-3">
         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border border-border bg-secondary">
           {token.image_url && !imgErr ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={token.image_url}
               alt={token.name ?? token.symbol ?? token.mint_address}
@@ -74,7 +82,7 @@ export function TokenCard({
             Migracja
           </div>
           <div className="mt-0.5 font-medium text-foreground">
-            {relativeFromNow(token.migrated_at)}
+            {relTime}
           </div>
         </div>
       </div>
